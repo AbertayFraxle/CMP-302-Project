@@ -60,6 +60,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(primaryAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Primary);
 
 		EnhancedInputComponent->BindAction(secondaryAction, ETriggerEvent::Started, this, &APlayerCharacter::Secondary);
+		EnhancedInputComponent->BindAction(secondaryAction, ETriggerEvent::Ongoing, this, &APlayerCharacter::SecondaryInProgress);
 		EnhancedInputComponent->BindAction(secondaryAction, ETriggerEvent::Completed, this, &APlayerCharacter::SecondaryReleased);
 
 		EnhancedInputComponent->BindAction(utilityAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Utility);
@@ -89,30 +90,55 @@ void APlayerCharacter::Look(const FInputActionValue& value)
 
 void APlayerCharacter::Jump(const FInputActionValue& value) {
 	Super::Jump();
+
+	//TODO: Add a custom jump function as the default character one isn't good enough
 }
 
 void APlayerCharacter::Primary(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Primary Attack Done"));
+	//TODO: Implement Loader's default melee attack
 }
 
 void APlayerCharacter::Secondary(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Secondary Attack Done"));
+
+	//TODO: IMPLEMENT THE SWINGING Anchor point
+	FHitResult hit;
+
+	GetWorld()->LineTraceSingleByChannel(hit, GetActorLocation()+GetActorForwardVector()*100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * 10000), ECC_Visibility);
+	DrawDebugLine(GetWorld(), GetActorLocation() + GetActorForwardVector() * 100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * 10000), FColor::Red,false,5.f);
+
+	if (hit.GetActor()) {
+		targLocation = hit.Location;
+	}
+
 }
 
 void APlayerCharacter::SecondaryReleased(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Secondary Attack Released"));
+	//TODO: RELEASE THE SWINGING MECHANIC, KEEP PLAYER'S DIRECTIONAL VELOCITY THE SAME
+	SetActorLocation(targLocation);
 }
+
+void APlayerCharacter::SecondaryInProgress(const FInputActionValue& value)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Secondary In Progress"));
+	//TODO: IMPLEMENT THE SWINGING
+}
+
 
 void APlayerCharacter::Utility(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Utility Abilty Used"));
+	//TODO: Add loader's dash attack
 }
 
 void APlayerCharacter::Special(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Special Ability Used"));
+	//TODO: Add the pylon to do damage and be grappled to
 }
 

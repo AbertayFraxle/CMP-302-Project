@@ -10,6 +10,8 @@
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "DrawDebugHelpers.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -65,12 +67,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USpringArmComponent* cameraBoom;
 
+	//set up variables 
+	FVector targLocation;
+
 	//define input action trigger functions
+
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
+
 	void Jump(const FInputActionValue& value);
+
 	void Primary(const FInputActionValue& value);
+
 	void Secondary(const FInputActionValue& value);
+	void SecondaryInProgress(const FInputActionValue& value);
 	void SecondaryReleased(const FInputActionValue& value);
 
 	void Utility(const FInputActionValue& value);
