@@ -69,14 +69,16 @@ protected:
 
 	//set up variables 
 	FVector targLocation;
+	bool grappleHit;
+
+	float primaryTimer;
+	float primaryAttacksPerSecond;
 
 	//define input action trigger functions
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
-
-	void Jump(const FInputActionValue& value);
-
+	
 	void Primary(const FInputActionValue& value);
 
 	void Secondary(const FInputActionValue& value);

@@ -21,6 +21,9 @@ APlayerCharacter::APlayerCharacter()
 	cameraBoom->bUsePawnControlRotation = true;
 
 	playerCam->SetupAttachment(cameraBoom);
+
+	primaryTimer = 0;
+	primaryAttacksPerSecond = 2;
 }
 
 // Called when the game starts or when spawned
@@ -42,6 +45,11 @@ void APlayerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (primaryTimer > 0)
+	{
+		primaryTimer -=DeltaTime;
+	}
+	
 }
 
 // Called to bind functionality to input
@@ -55,7 +63,7 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 		EnhancedInputComponent->BindAction(lookAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Look);
 
-		EnhancedInputComponent->BindAction(jumpAction, ETriggerEvent::Started, this, &APlayerCharacter::Jump);
+		EnhancedInputComponent->BindAction(jumpAction, ETriggerEvent::Started, this, &Super::Jump);
 
 		EnhancedInputComponent->BindAction(primaryAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Primary);
 
@@ -88,15 +96,13 @@ void APlayerCharacter::Look(const FInputActionValue& value)
 
 }
 
-void APlayerCharacter::Jump(const FInputActionValue& value) {
-	Super::Jump();
-
-	//TODO: Add a custom jump function as the default character one isn't good enough
-}
-
 void APlayerCharacter::Primary(const FInputActionValue& value)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Primary Attack Done"));
+	if (primaryTimer <=0)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Primary Attack Done"));
+		primaryTimer = 1.f/primaryAttacksPerSecond;
+	}
 	//TODO: Implement Loader's default melee attack
 }
 
@@ -111,7 +117,11 @@ void APlayerCharacter::Secondary(const FInputActionValue& value)
 	DrawDebugLine(GetWorld(), GetActorLocation() + GetActorForwardVector() * 100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * 10000), FColor::Red,false,5.f);
 
 	if (hit.GetActor()) {
+		grappleHit = true;
 		targLocation = hit.Location;
+	}else
+	{
+		grappleHit = false;
 	}
 
 }
@@ -120,7 +130,10 @@ void APlayerCharacter::SecondaryReleased(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Secondary Attack Released"));
 	//TODO: RELEASE THE SWINGING MECHANIC, KEEP PLAYER'S DIRECTIONAL VELOCITY THE SAME
-	SetActorLocation(targLocation);
+	if (grappleHit)
+	{
+		SetActorLocation(targLocation);
+	}
 }
 
 void APlayerCharacter::SecondaryInProgress(const FInputActionValue& value)
