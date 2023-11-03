@@ -93,7 +93,7 @@ void APlayerCharacter::Look(const FInputActionValue& value)
 
 	AddControllerYawInput(LookVector.X);
 	AddControllerPitchInput(LookVector.Y);
-
+	
 }
 
 void APlayerCharacter::Primary(const FInputActionValue& value)
@@ -118,7 +118,7 @@ void APlayerCharacter::Secondary(const FInputActionValue& value)
 
 	if (hit.GetActor()) {
 		grappleHit = true;
-		targLocation = hit.Location;
+		grapplePoint = hit.Location;
 	}else
 	{
 		grappleHit = false;
@@ -140,6 +140,7 @@ void APlayerCharacter::SecondaryInProgress(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Secondary In Progress"));
 	//TODO: IMPLEMENT THE SWINGING
+	
 }
 
 

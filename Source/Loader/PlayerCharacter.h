@@ -68,7 +68,7 @@ protected:
 	USpringArmComponent* cameraBoom;
 
 	//set up variables 
-	FVector targLocation;
+	FVector grapplePoint;
 	bool grappleHit;
 
 	float primaryTimer;
