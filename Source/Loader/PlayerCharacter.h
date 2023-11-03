@@ -4,6 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "EnhancedInputComponent.h"
+#include "InputAction.h"
+#include "InputMappingContext.h"
+#include "EnhancedInputSubsystems.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -25,5 +31,51 @@ public:
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+protected:
+
+	//setup input actions
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UInputAction* moveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* lookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* jumpAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* primaryAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* secondaryAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* utilityAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* specialAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputMappingContext* inputMappingContext;
+
+	//set up camera component
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UCameraComponent* playerCam;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USpringArmComponent* cameraBoom;
+
+	//define input action trigger functions
+	void Move(const FInputActionValue& value);
+	void Look(const FInputActionValue& value);
+	void Jump(const FInputActionValue& value);
+	void Primary(const FInputActionValue& value);
+	void Secondary(const FInputActionValue& value);
+	void SecondaryReleased(const FInputActionValue& value);
+
+	void Utility(const FInputActionValue& value);
+	void Special(const FInputActionValue& values);
+
+
 
 };
