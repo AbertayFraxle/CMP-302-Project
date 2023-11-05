@@ -47,6 +47,9 @@ protected:
 	UInputAction* jumpAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UInputAction* sprintAction;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	UInputAction* primaryAction;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
@@ -66,18 +69,25 @@ protected:
 	UCameraComponent* playerCam;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USpringArmComponent* cameraBoom;
-
+	
 	//set up variables 
 	FVector grapplePoint;
 	bool grappleHit;
-
+	
+	bool sprinting;
 	float primaryTimer;
 	float primaryAttacksPerSecond;
+	float grappleRange;
+	float radius;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool inRange;
+	
 	//define input action trigger functions
 
 	void Move(const FInputActionValue& value);
 	void Look(const FInputActionValue& value);
+	void Sprint(const FInputActionValue& value);
 	
 	void Primary(const FInputActionValue& value);
 

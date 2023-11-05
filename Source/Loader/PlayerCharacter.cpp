@@ -24,6 +24,10 @@ APlayerCharacter::APlayerCharacter()
 
 	primaryTimer = 0;
 	primaryAttacksPerSecond = 2;
+
+	grappleRange = 50000;
+
+	sprinting = false;
 }
 
 // Called when the game starts or when spawned
@@ -49,6 +53,18 @@ void APlayerCharacter::Tick(float DeltaTime)
 	{
 		primaryTimer -=DeltaTime;
 	}
+
+	FHitResult hit;
+
+	GetWorld()->LineTraceSingleByChannel(hit, GetActorLocation()+GetActorForwardVector()*100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * grappleRange), ECC_Visibility);
+
+	if (hit.GetActor())
+	{
+		inRange = true;
+	}else
+	{
+		inRange = false;
+	}
 	
 }
 
@@ -65,6 +81,8 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 		EnhancedInputComponent->BindAction(jumpAction, ETriggerEvent::Started, this, &Super::Jump);
 
+		EnhancedInputComponent->BindAction(sprintAction, ETriggerEvent::Started, this, &APlayerCharacter::Sprint);
+		
 		EnhancedInputComponent->BindAction(primaryAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Primary);
 
 		EnhancedInputComponent->BindAction(secondaryAction, ETriggerEvent::Started, this, &APlayerCharacter::Secondary);
@@ -82,9 +100,15 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 void APlayerCharacter::Move(const FInputActionValue& value)
 {
 	FVector2D MovementVector = value.Get<FVector2D>();
+	float modifier = 0.69;
 
-	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
-	AddMovementInput(GetActorRightVector(), MovementVector.X);
+	if (sprinting)
+	{
+		modifier = 1.f;
+	}
+	
+	AddMovementInput(GetActorForwardVector(), MovementVector.Y*modifier);
+	AddMovementInput(GetActorRightVector(), MovementVector.X*modifier);
 }
 
 void APlayerCharacter::Look(const FInputActionValue& value)
@@ -113,12 +137,14 @@ void APlayerCharacter::Secondary(const FInputActionValue& value)
 	//TODO: IMPLEMENT THE SWINGING Anchor point
 	FHitResult hit;
 
-	GetWorld()->LineTraceSingleByChannel(hit, GetActorLocation()+GetActorForwardVector()*100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * 10000), ECC_Visibility);
-	DrawDebugLine(GetWorld(), GetActorLocation() + GetActorForwardVector() * 100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * 10000), FColor::Red,false,5.f);
+	GetWorld()->LineTraceSingleByChannel(hit, GetActorLocation()+GetActorForwardVector()*100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * grappleRange), ECC_Visibility);
+	DrawDebugLine(GetWorld(), GetActorLocation() + GetActorForwardVector() * 100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * grappleRange), FColor::Red,false,5.f);
 
 	if (hit.GetActor()) {
 		grappleHit = true;
 		grapplePoint = hit.Location;
+		FVector diff = hit.Location - GetActorLocation();
+		radius = diff.Length();
 	}else
 	{
 		grappleHit = false;
@@ -132,7 +158,7 @@ void APlayerCharacter::SecondaryReleased(const FInputActionValue& value)
 	//TODO: RELEASE THE SWINGING MECHANIC, KEEP PLAYER'S DIRECTIONAL VELOCITY THE SAME
 	if (grappleHit)
 	{
-		SetActorLocation(targLocation);
+		
 	}
 }
 
@@ -140,6 +166,7 @@ void APlayerCharacter::SecondaryInProgress(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Secondary In Progress"));
 	//TODO: IMPLEMENT THE SWINGING
+	
 	
 }
 
@@ -154,5 +181,19 @@ void APlayerCharacter::Special(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Special Ability Used"));
 	//TODO: Add the pylon to do damage and be grappled to
+}
+
+void APlayerCharacter::Sprint(const FInputActionValue& value)
+{
+	
+	if (!sprinting)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Sprinting is true"));
+		sprinting = true;
+	}else
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Sprinting is false"));
+		sprinting = false;
+	}
 }
 
