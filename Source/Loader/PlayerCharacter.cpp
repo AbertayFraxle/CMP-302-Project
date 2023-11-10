@@ -27,6 +27,8 @@ APlayerCharacter::APlayerCharacter()
 
 	grappleRange = 50000;
 
+	GetCharacterMovement()->MaxWalkSpeed = 700;
+
 	sprinting = false;
 }
 
@@ -100,15 +102,10 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 void APlayerCharacter::Move(const FInputActionValue& value)
 {
 	FVector2D MovementVector = value.Get<FVector2D>();
-	float modifier = 0.69;
 
-	if (sprinting)
-	{
-		modifier = 1.f;
-	}
-	
-	AddMovementInput(GetActorForwardVector(), MovementVector.Y*modifier);
-	AddMovementInput(GetActorRightVector(), MovementVector.X*modifier);
+
+	AddMovementInput(GetActorForwardVector(), MovementVector.Y);
+	AddMovementInput(GetActorRightVector(), MovementVector.X);
 }
 
 void APlayerCharacter::Look(const FInputActionValue& value)
@@ -167,6 +164,23 @@ void APlayerCharacter::SecondaryInProgress(const FInputActionValue& value)
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Secondary In Progress"));
 	//TODO: IMPLEMENT THE SWINGING
 	
+	FVector diff =  GetActorLocation() - grapplePoint;
+	double diffL = diff.Length();
+	FVector velo = GetVelocity();
+
+	double dot = diff.Dot(GetVelocity());
+
+	FVector normal = diff / diffL;
+	
+	velo = FVector::VectorPlaneProject(velo, normal);
+
+
+
+
+	if (dot >= 0  && grappleHit) {
+		GetCharacterMovement()->Velocity = velo;
+	}
+
 	
 }
 
@@ -189,11 +203,13 @@ void APlayerCharacter::Sprint(const FInputActionValue& value)
 	if (!sprinting)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Sprinting is true"));
+		GetCharacterMovement()->MaxWalkSpeed = 700 * 1.45;
 		sprinting = true;
 	}else
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Sprinting is false"));
 		sprinting = false;
+		GetCharacterMovement()->MaxWalkSpeed = 700;
 	}
 }
 
