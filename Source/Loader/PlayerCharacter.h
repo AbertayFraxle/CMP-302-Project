@@ -13,6 +13,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "DrawDebugHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "CableComponent.h"
 #include "PlayerCharacter.generated.h"
 
 UCLASS()
@@ -70,9 +71,18 @@ protected:
 	UCameraComponent* playerCam;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USpringArmComponent* cameraBoom;
+
+	//set up component for grappling cable
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	UCableComponent* grappleCable;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	USceneComponent* hook;
+
 	
 	//set up variables 
 	FVector grapplePoint;
+	FVector dirToPlayer;
 	bool grappleHit;
 	
 	bool sprinting;

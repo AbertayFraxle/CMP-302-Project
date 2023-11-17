@@ -14,6 +14,12 @@ APlayerCharacter::APlayerCharacter()
 	cameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("Camera Boom"));
 	cameraBoom->TargetArmLength = 500;
 
+	hook = CreateDefaultSubobject<USceneComponent>(TEXT("Grapple Hook"));
+
+	grappleCable = CreateDefaultSubobject<UCableComponent>(TEXT("Grapple Cable"));
+	grappleCable->SetupAttachment(RootComponent);
+
+
 	cameraBoom->SetupAttachment(RootComponent);
 
 	cameraBoom->bInheritPitch = true;
@@ -36,13 +42,18 @@ APlayerCharacter::APlayerCharacter()
 void APlayerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
 	
+	grappleCable->SetVisibility(false);
+	hook->SetVisibility(false);
+
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer())) {
 			Subsystem->AddMappingContext(inputMappingContext, 0);
 		}
 	}
+
 
 }
 
@@ -58,7 +69,7 @@ void APlayerCharacter::Tick(float DeltaTime)
 
 	FHitResult hit;
 
-	GetWorld()->LineTraceSingleByChannel(hit, GetActorLocation()+GetActorForwardVector()*100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * grappleRange), ECC_Visibility);
+	GetWorld()->LineTraceSingleByChannel(hit, playerCam->GetComponentLocation() + playerCam->GetForwardVector() *100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * grappleRange), ECC_Visibility);
 
 	if (hit.GetActor())
 	{
@@ -134,14 +145,25 @@ void APlayerCharacter::Secondary(const FInputActionValue& value)
 	//TODO: IMPLEMENT THE SWINGING Anchor point
 	FHitResult hit;
 
-	GetWorld()->LineTraceSingleByChannel(hit, GetActorLocation()+GetActorForwardVector()*100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * grappleRange), ECC_Visibility);
-	DrawDebugLine(GetWorld(), GetActorLocation() + GetActorForwardVector() * 100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * grappleRange), FColor::Red,false,5.f);
+	GetWorld()->LineTraceSingleByChannel(hit, playerCam->GetComponentLocation() + playerCam->GetForwardVector() *100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * grappleRange), ECC_Visibility);
+	
 
 	if (hit.GetActor()) {
 		grappleHit = true;
 		grapplePoint = hit.Location;
 		FVector diff = hit.Location - GetActorLocation();
 		radius = diff.Length();
+		hook->SetWorldLocation(grapplePoint);
+
+		grappleCable->SetAttachEndToComponent(hook);
+
+		grappleCable->SetVisibility(true);
+		hook->SetVisibility(true);
+
+		if (GetVelocity().Length() <= 0) {
+			GetCharacterMovement()->AddImpulse(diff*1, true);
+		}
+
 	}else
 	{
 		grappleHit = false;
@@ -155,7 +177,10 @@ void APlayerCharacter::SecondaryReleased(const FInputActionValue& value)
 	//TODO: RELEASE THE SWINGING MECHANIC, KEEP PLAYER'S DIRECTIONAL VELOCITY THE SAME
 	if (grappleHit)
 	{
-		
+		grappleCable->SetVisibility(false);
+		hook->SetVisibility(false);
+
+		grappleHit = false;
 	}
 }
 
@@ -164,23 +189,42 @@ void APlayerCharacter::SecondaryInProgress(const FInputActionValue& value)
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Secondary In Progress"));
 	//TODO: IMPLEMENT THE SWINGING
 	
+	grappleCable->SetWorldLocation(GetActorLocation());
+
 	FVector diff =  GetActorLocation() - grapplePoint;
+
+	dirToPlayer =  grapplePoint - playerCam->GetComponentLocation();
+	dirToPlayer.Normalize();
+
+
 	double diffL = diff.Length();
 	FVector velo = GetVelocity();
 
 	double dot = diff.Dot(GetVelocity());
 
 	FVector normal = diff / diffL;
-	
+
+	diff.Normalize();
+		
 	velo = FVector::VectorPlaneProject(velo, normal);
+	velo += playerCam->GetForwardVector();
 
+	
+	if (dirToPlayer.Dot(playerCam->GetForwardVector()) >=0.99) {
 
-
+		float strength = velo.Length();
+		
+		velo = (strength) * -diff;
+		
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("MOVING TOWARDS"));
+	}
+	
 
 	if (dot >= 0  && grappleHit) {
 		GetCharacterMovement()->Velocity = velo;
 	}
 
+	
 	
 }
 
