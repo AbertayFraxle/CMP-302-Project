@@ -54,7 +54,7 @@ void APlayerCharacter::BeginPlay()
 		}
 	}
 
-
+	grappleTimer = 0;
 }
 
 // Called every frame
@@ -67,6 +67,10 @@ void APlayerCharacter::Tick(float DeltaTime)
 		primaryTimer -=DeltaTime;
 	}
 
+	if (grappleTimer > 0) {
+		grappleTimer -= DeltaTime;
+	}
+
 	FHitResult hit;
 
 	GetWorld()->LineTraceSingleByChannel(hit, playerCam->GetComponentLocation() + playerCam->GetForwardVector() *100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * grappleRange), ECC_Visibility);
@@ -77,6 +81,18 @@ void APlayerCharacter::Tick(float DeltaTime)
 	}else
 	{
 		inRange = false;
+	}
+
+	if (dashCharging) {
+		if (dashMeter < DASHLIMIT) {
+			dashMeter += 1000 * DeltaTime;
+		}
+	}
+	else {
+		if (dashMeter > 0) {
+			GetCharacterMovement()->AddImpulse(dashMeter * playerCam->GetForwardVector(), true);
+			dashMeter = 0;
+		}
 	}
 	
 }
@@ -102,7 +118,9 @@ void APlayerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 		EnhancedInputComponent->BindAction(secondaryAction, ETriggerEvent::Ongoing, this, &APlayerCharacter::SecondaryInProgress);
 		EnhancedInputComponent->BindAction(secondaryAction, ETriggerEvent::Completed, this, &APlayerCharacter::SecondaryReleased);
 
-		EnhancedInputComponent->BindAction(utilityAction, ETriggerEvent::Triggered, this, &APlayerCharacter::Utility);
+		EnhancedInputComponent->BindAction(utilityAction, ETriggerEvent::Started, this, &APlayerCharacter::Utility);
+		EnhancedInputComponent->BindAction(utilityAction, ETriggerEvent::Completed, this, &APlayerCharacter::UtilityRelease);
+
 
 		EnhancedInputComponent->BindAction(specialAction, ETriggerEvent::Started, this, &APlayerCharacter::Special);
 
@@ -148,27 +166,29 @@ void APlayerCharacter::Secondary(const FInputActionValue& value)
 	GetWorld()->LineTraceSingleByChannel(hit, playerCam->GetComponentLocation() + playerCam->GetForwardVector() *100, playerCam->GetComponentLocation() + (playerCam->GetForwardVector() * grappleRange), ECC_Visibility);
 	
 
-	if (hit.GetActor()) {
-		grappleHit = true;
-		grapplePoint = hit.Location;
-		FVector diff = hit.Location - GetActorLocation();
-		radius = diff.Length();
-		hook->SetWorldLocation(grapplePoint);
+	if (grappleTimer <= 0) {
+		if (hit.GetActor()) {
+			grappleHit = true;
+			grapplePoint = hit.Location;
+			FVector diff = hit.Location - GetActorLocation();
+			radius = diff.Length();
+			hook->SetWorldLocation(grapplePoint);
 
-		grappleCable->SetAttachEndToComponent(hook);
+			grappleCable->SetAttachEndToComponent(hook);
 
-		grappleCable->SetVisibility(true);
-		hook->SetVisibility(true);
+			grappleCable->SetVisibility(true);
+			hook->SetVisibility(true);
 
-		if (GetVelocity().Length() <= 0) {
-			GetCharacterMovement()->AddImpulse(diff*1, true);
+			if (GetVelocity().Length() <= 0) {
+				GetCharacterMovement()->AddImpulse(diff * 1, true);
+			}
+
 		}
-
-	}else
-	{
-		grappleHit = false;
+		else
+		{
+			grappleHit = false;
+		}
 	}
-
 }
 
 void APlayerCharacter::SecondaryReleased(const FInputActionValue& value)
@@ -181,6 +201,8 @@ void APlayerCharacter::SecondaryReleased(const FInputActionValue& value)
 		hook->SetVisibility(false);
 
 		grappleHit = false;
+
+		grappleTimer = 5.f;
 	}
 }
 
@@ -189,7 +211,7 @@ void APlayerCharacter::SecondaryInProgress(const FInputActionValue& value)
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Secondary In Progress"));
 	//TODO: IMPLEMENT THE SWINGING
 	
-	grappleCable->SetWorldLocation(GetActorLocation());
+	grappleCable->SetWorldLocation(GetActorLocation()-(GetActorRightVector()*20));
 
 	FVector diff =  GetActorLocation() - grapplePoint;
 
@@ -233,12 +255,23 @@ void APlayerCharacter::Utility(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Utility Abilty Used"));
 	//TODO: Add loader's dash attack
+
+	dashCharging = true;
+
+}
+
+void APlayerCharacter::UtilityRelease(const FInputActionValue& value)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Utility Abilty Released"));
+
+	dashCharging = false;
 }
 
 void APlayerCharacter::Special(const FInputActionValue& value)
 {
 	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, TEXT("Special Ability Used"));
 	//TODO: Add the pylon to do damage and be grappled to
+	currPylon = GetWorld()->SpawnActor<APylon>(GetActorLocation(),GetActorRotation());
 }
 
 void APlayerCharacter::Sprint(const FInputActionValue& value)

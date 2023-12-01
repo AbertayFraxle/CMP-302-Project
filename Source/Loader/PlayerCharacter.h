@@ -14,7 +14,10 @@
 #include "DrawDebugHelpers.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "CableComponent.h"
+#include "Pylon.h"
 #include "PlayerCharacter.generated.h"
+
+#define DASHLIMIT 2000
 
 UCLASS()
 class LOADER_API APlayerCharacter : public ACharacter
@@ -79,6 +82,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	USceneComponent* hook;
 
+	APylon* currPylon;
 	
 	//set up variables 
 	FVector grapplePoint;
@@ -88,8 +92,13 @@ protected:
 	bool sprinting;
 	float primaryTimer;
 	float primaryAttacksPerSecond;
+
+	float grappleTimer;
 	float grappleRange;
 	float radius;
+
+	bool dashCharging;
+	float dashMeter;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	bool inRange;
@@ -107,6 +116,9 @@ protected:
 	void SecondaryReleased(const FInputActionValue& value);
 
 	void Utility(const FInputActionValue& value);
+	void UtilityRelease(const FInputActionValue& value);
+
+
 	void Special(const FInputActionValue& values);
 
 
