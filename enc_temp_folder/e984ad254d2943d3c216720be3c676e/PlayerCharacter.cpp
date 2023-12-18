@@ -563,8 +563,8 @@ void APlayerCharacter::OnBoxBeginOverlap(UPrimitiveComponent* HitComp, AActor* O
 				//clamp checked for speed to 20m/s
 				if (length > 2000) { length = 2000; };
 
-				//reduce enemy health by DAMAGE + 10% per m/s moving
-				alien->reduceHealth(DAMAGE + ((length / 100) * (DAMAGE*0.1)));
+				//reduce enemy health by DAMAGE + 30% per m/s moving
+				alien->reduceHealth(DAMAGE + ((length / 100) * (DAMAGE*0.3)));
 
 				//knock the enemy back by the damage
 				alien->GetCharacterMovement()->AddImpulse((unit * length), true);
